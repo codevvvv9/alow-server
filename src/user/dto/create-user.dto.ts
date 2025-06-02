@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-
+import { IsString, IsEmail, IsNotEmpty, MinLength, MaxLength, Matches } from "class-validator";
 export class CreateUserDto {
 
   @ApiProperty({
@@ -16,6 +16,13 @@ export class CreateUserDto {
     format: 'phone-number', // 自定义格式
     title: 'Phone Number',
   })
+  @Matches(/^1[3-9]\d{9}$/, {
+    message: '手机号格式不正确，必须是11位数字，以1开头，第二位为3-9之间的数字',
+  })
+  @IsString()
+  @IsNotEmpty({ message: '手机号不能为空' })
+  @MinLength(11, { message: '手机号长度必须为11位' })
+  @MaxLength(11, { message: '手机号长度不能超过11位' })
   readonly phoneNumber: string;
 
   @ApiProperty({
@@ -44,6 +51,7 @@ export class CreateUserDto {
     title: 'Email Address',
     uniqueItems: true, // 确保邮箱唯一 
     })
+  @IsEmail({}, { message: '邮箱格式不正确' })
   email: string;
 
   @ApiProperty({
@@ -58,5 +66,9 @@ export class CreateUserDto {
     format: 'password', // 自定义格式
     title: 'Password',
   })
+  @IsNotEmpty({ message: '密码不能为空' })
+  @IsString()
+  @MinLength(6, { message: '密码长度不能少于6位' })
+  @MaxLength(20, { message: '密码长度不能超过20位' })
   password: string;
 }
