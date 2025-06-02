@@ -11,7 +11,7 @@ export class UserService {
   ) {}
   create(createUserDto: CreateUserDto) {
     // 追加调用模块
-    console.log('env === ', this.systemService.getEnv())
+    // console.log('env === ', this.systemService.getEnv())
     return 'This action adds a new user';
   }
 
