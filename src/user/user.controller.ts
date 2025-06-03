@@ -7,12 +7,15 @@ import {
   Param,
   Delete,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { PaginationParamsDto } from 'src/shared/dtos/pagination-params.dto';
+import { plainToInstance } from 'class-transformer';
 
 @ApiTags('用户相关') // Swagger 标签，用于分组API
 @Controller('user')
@@ -35,14 +38,28 @@ export class UserController {
   })
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
-    console.log('ENV: URL === ', this.configService.get<string>('database.url'));
+    // console.log('ENV: URL === ', this.configService.get<string>('database.url'));
     
     return this.userService.create(createUserDto);
   }
 
   @Get()
-  findAll() {
-    return this.userService.findAll();
+  async findAll(@Query() query: Record<string, any>) {
+    // 如果需要处理分页参数，可以在这里进行处理
+    console.log('Query Params:', query);
+    // 将查询参数转换为 PaginationParamsDto 实例
+    // 确保 class-transformer 能够正确转换
+    const paginationParams = plainToInstance(PaginationParamsDto, query)
+    // return this.userService.findAll(paginationParams);
+    const { data, count}  = await this.userService.findAll(paginationParams);
+    return {
+      data,
+      meta: {
+        total: count, // 总记录数
+        page: paginationParams.page, // 当前页码
+        pageSize: paginationParams.pageSize, // 每页条数
+      }
+    }
   }
 
   @Get(':id')
