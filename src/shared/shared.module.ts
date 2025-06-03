@@ -3,11 +3,13 @@ import { SystemService } from "./system.service";
 import { ConfigModule } from "@nestjs/config";
 import { configModuleOptions } from "./configs/module-options";
 import { DatabaseProviders } from "./database.providers";
+import { AppLoggerModule } from "./logger/logger.module";
 
 @Module({
   imports: [
     // 注入 config
     ConfigModule.forRoot(configModuleOptions),
+    AppLoggerModule
   ],
   controllers: [],
   providers: [
@@ -17,7 +19,8 @@ import { DatabaseProviders } from "./database.providers";
   exports: [
     SystemService,
     ConfigModule, // Exporting ConfigModule to make it available in other modules
-    ...DatabaseProviders // Exporting database providers to make them available in other modules
+    ...DatabaseProviders, // Exporting database providers to make them available in other modules
+    AppLoggerModule,
   ],
 })
 export class SharedModule {
