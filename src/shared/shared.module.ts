@@ -4,6 +4,7 @@ import { ConfigModule } from "@nestjs/config";
 import { configModuleOptions } from "./configs/module-options";
 import { DatabaseProviders } from "./database.providers";
 import { AppLoggerModule } from "./logger/logger.module";
+import { RemoveSensitiveInfoInterceptor } from "./interceptors/remove-sensitive-info.interceptor";
 
 @Module({
   imports: [
@@ -14,13 +15,15 @@ import { AppLoggerModule } from "./logger/logger.module";
   controllers: [],
   providers: [
     SystemService,
-    ...DatabaseProviders
+    ...DatabaseProviders,
+    RemoveSensitiveInfoInterceptor
   ],
   exports: [
     SystemService,
     ConfigModule, // Exporting ConfigModule to make it available in other modules
     ...DatabaseProviders, // Exporting database providers to make them available in other modules
     AppLoggerModule,
+    RemoveSensitiveInfoInterceptor // Exporting the interceptor to make it available in other modules
   ],
 })
 export class SharedModule {

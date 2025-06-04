@@ -1,16 +1,25 @@
-import { CallHandler, ExecutionContext, NestInterceptor } from "@nestjs/common";
-import { log } from "console";
+import { Ca.lHandler, ExecutionContext, Inject, Injectable, NestInterceptor } from "@nestjs/common";
 import { map, Observable } from "rxjs";
+import { AppLoggerService } from "../logger/logger.service";
 
+@Injectable()
 export class RemoveSensitiveInfoInterceptor implements NestInterceptor {
+  constructor(
+    // 可以在这里注入其他服务，如果需要的话
+    // private readonly systemService: SystemService, // 例如，注入系统服务
+    // private readonly configService: ConfigService, // 如果需要配置服务
+    private readonly logger: AppLoggerService, // 日志服务
+  ) {
+
+  }
   sensitiveKeys = ['password', 'salt']; // 默认敏感字段
 
   intercept(context: ExecutionContext, next: CallHandler<any>): Observable<any> | Promise<Observable<any>> {
     const request = context.switchToHttp().getRequest();
-    log(`Request URL: ${request.body}`);
     return next.handle().pipe(
       map(res => {
         if (res && typeof res === 'object') {
+          this.logger.info('remove sensitive ctx', `Response before removing sensitive info: ${JSON.stringify(res)}`);
           res = JSON.parse(JSON.stringify(res));
           // 全局消除，如果有敏感信息，删除密码等字段
           res = this.removeSensitiveInfo(res, this.sensitiveKeys);
