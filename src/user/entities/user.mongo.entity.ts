@@ -11,4 +11,14 @@ export class User extends CommonEntity {
     length: 100,
   })
   email: string;
+
+  // 加密相关
+  @Column('text')
+  password: string;
+
+  @Column({
+    type: 'text',
+    select: false, // 不在查询中返回此字段
+  })
+  salt: string;
 }
