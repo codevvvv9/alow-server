@@ -1,4 +1,3 @@
-
 export default (): any => ({
   // 这里可以添加更多的配置项
   port: process.env.APP_PORT || 3000,
@@ -11,4 +10,11 @@ export default (): any => ({
     synchronize: process.env.DB_SYNCHRONIZE,
     logging: process.env.DB_LOGGING
   },
+  jwt: {
+    secret: process.env.JWT_SECRET,
+    signOptions: {
+      // 过期时间
+      expiresIn: process.env.JWT_EXPIRES_IN
+    }
+  }
 });

@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } from "@nestjs/common";
+import {
+  Body, 
+  Controller, 
+  Get, 
+  HttpCode, 
+  HttpStatus, 
+  Post, 
+  Req, 
+  // Session, 
+  UseGuards 
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AuthService } from "../services/auth.service";
 import { JwtAuthGuard } from "../guards/jwt-auth.guard";
@@ -17,6 +27,14 @@ export class AuthController {
   @ApiOperation({
     summary: '用户注册',
   })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    // type: SwaggerBaseApiResponse(LoginDTO),
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    // type: BaseApiErrorResponse,
+  })
   @HttpCode(200) // 设置HTTP状态码为200
   @Post('register')
   async register(
@@ -30,13 +48,22 @@ export class AuthController {
   @ApiOperation({
     summary: '用户登录',
   })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    // type: SwaggerBaseApiResponse(LoginDTO),
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    // type: BaseApiErrorResponse,
+  })
   @HttpCode(200) // 设置HTTP状态码为200
   @Post('login')
   async login(
-    @Body() loginDTO: LoginDTO
+    @Body() loginDTO: LoginDTO,
   ): Promise<any> {
     // 处理登录逻辑
-    // return this.authService.login();
+    const userLogin = await this.authService.login(loginDTO);
+    return userLogin
   }
 
   @ApiOperation({
@@ -45,6 +72,10 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: '登出成功',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    // type: BaseApiErrorResponse,
   })
   @HttpCode(200) // 设置HTTP状态码为200
   @Post('logout')
@@ -56,6 +87,14 @@ export class AuthController {
   @ApiOperation({
     summary: '获取用户信息',
   })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    // type: SwaggerBaseApiResponse(UserInfoDto),
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    // type: BaseApiErrorResponse,
+  })
   @ApiBearerAuth() // 添加Bearer认证
   @Get('info')
   // 使用自定义的JWT守卫保护此路由
@@ -64,6 +103,9 @@ export class AuthController {
     @Req() req: any // 这里可以使用具体的 Request 类型
   ): Promise<any> {
     // 获取用户信息逻辑
-    // return this.authService.getInfo();
+    const data = await this.authService.getInfo(req.user.id);
+    return {
+      data
+    }
   }
 }

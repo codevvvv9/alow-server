@@ -1,17 +1,18 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-// import { JwtService } from "@nestjs/jwt";
+import { BadRequestException, Inject, Injectable, InternalServerErrorException } from "@nestjs/common";
 import { MongoRepository } from "typeorm";
 import { User } from "../entities/user.mongo.entity";
 import { AppLoggerService } from "src/shared/logger/logger.service";
-import { RegisterDTO } from "../dtos/auth.dto";
+import { LoginDTO, RegisterDTO, UserInfoDto } from "../dtos/auth.dto";
 import { encryptPassword, generateSalt } from "src/shared/utils/cryptogram.utils";
+import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
 export class AuthService {
   constructor(
     @Inject('USER_REPOSITORY')
     private userRepository: MongoRepository<User>, // 假设有一个用户仓库用于用户数据操作
-    private readonly logger: AppLoggerService // 注入日志服务
+    private readonly logger: AppLoggerService, // 注入日志服务
+    private readonly jwtService: JwtService
   ) {
 
   }
@@ -59,4 +60,53 @@ export class AuthService {
     }
     this.logger.info('check register', `User with name ${name} does not exist, proceeding with registration`);
   }
+
+  async login(loginDto: LoginDTO) {
+    // 校验登录的用户名密码
+    const user = await this.checkLoginForm(loginDto);
+    this.logger.info('User logged in successfully', JSON.stringify(user));
+    // jwt签名
+    const token = await this.certificateWithJwt(user);
+    return {
+      ...user,
+      sessionId: `Bearer ${token}`, // jwt规范的格式，前端需要携带这个token字符串
+    }
+  }
+
+  async checkLoginForm(loginDto: LoginDTO): Promise<User> {
+    const {name, password} = loginDto
+
+    const user = await this.userRepository.findOneBy({
+      name
+    })
+    if (!user) {
+      throw new InternalServerErrorException('用户不存在')
+    }
+    // 获取之前用户存储的盐和 hash 密码
+    const {password: userPasswordDB, salt} = user
+    // 使用登录时提供的密码和盐值进行比对
+    const passwordHash = encryptPassword(password, salt)
+    if (userPasswordDB !== passwordHash) {
+      throw new InternalServerErrorException('密码错误')
+    }
+
+    return user
+  }
+
+  async certificateWithJwt(user: User): Promise<string> {
+    const payload = {
+      id: user._id,
+    }
+
+    const token = this.jwtService.sign(payload)
+    return token
+  }
+
+  async getInfo(id: string): Promise<UserInfoDto> {
+    // 获取用户信息逻辑
+    const user = await this.userRepository.findOneBy(id)
+    const data: UserInfoDto = Object.assign({}, user)
+
+    return data
+  } 
 }

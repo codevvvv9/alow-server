@@ -91,7 +91,6 @@ export class UserInfoDto {
     password?: string;
 
     salt?: string; // 可选的盐值，用于密码加密
-    phoneNumber?: string; // 可选的手机号
     email?: string; // 可选的邮箱地址
 
 }
