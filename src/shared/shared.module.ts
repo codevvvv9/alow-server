@@ -5,6 +5,7 @@ import { configModuleOptions } from "./configs/module-options";
 import { DatabaseProviders } from "./database.providers";
 import { AppLoggerModule } from "./logger/logger.module";
 import { RemoveSensitiveInfoInterceptor } from "./interceptors/remove-sensitive-info.interceptor";
+import { AllExceptionFilter } from "./filters/AllExceptionFillter";
 
 @Module({
   imports: [
@@ -16,14 +17,16 @@ import { RemoveSensitiveInfoInterceptor } from "./interceptors/remove-sensitive-
   providers: [
     SystemService,
     ...DatabaseProviders,
-    RemoveSensitiveInfoInterceptor
+    RemoveSensitiveInfoInterceptor,
+    AllExceptionFilter
   ],
   exports: [
     SystemService,
     ConfigModule, // Exporting ConfigModule to make it available in other modules
     ...DatabaseProviders, // Exporting database providers to make them available in other modules
     AppLoggerModule,
-    RemoveSensitiveInfoInterceptor // Exporting the interceptor to make it available in other modules
+    RemoveSensitiveInfoInterceptor, // Exporting the interceptor to make it available in other modules
+    AllExceptionFilter
   ],
 })
 export class SharedModule {

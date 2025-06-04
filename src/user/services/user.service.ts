@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { UpdateUserDto } from '../dtos/update-user.dto';
 import { SystemService } from '../../shared/system.service'; // Adjust the path as needed
@@ -31,6 +31,7 @@ export class UserService {
   }
   async findAll({pageSize, page}: PaginationParamsDto): Promise<{data: User[], count: number}> {
     // return `This action returns all user`;
+    throw new HttpException('自定义异常', HttpStatus.CONFLICT)
     const [data, count] = await this.userRepository.findAndCount({
       skip: (page - 1) * pageSize, // 计算跳过的记录数
       take: pageSize, // 限制返回的记录数
