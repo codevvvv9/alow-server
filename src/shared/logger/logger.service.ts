@@ -14,7 +14,7 @@ export class AppLoggerService {
 
   constructor() {
     this.logger = createLogger({
-      level: 'info',
+      level: process.env.LOGGER_LEVEL,
       format: format.combine(
         format.timestamp(),
         format.prettyPrint({
