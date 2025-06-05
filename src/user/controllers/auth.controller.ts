@@ -12,7 +12,8 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AuthService } from "../services/auth.service";
 import { JwtAuthGuard } from "../guards/jwt-auth.guard";
-import { LoginDTO, RegisterDTO } from "../dtos/auth.dto";
+import { LoginDTO, RegisterDTO, UserInfoDto } from "../dtos/auth.dto";
+import { BaseApiErrorResponse, SwaggerBaseApiResponse } from "src/shared/dtos/base-api-response.dto";
 
 @ApiTags('auth 认证鉴权')
 @Controller('api')
@@ -29,11 +30,11 @@ export class AuthController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    // type: SwaggerBaseApiResponse(LoginDTO),
+    type: SwaggerBaseApiResponse(LoginDTO),
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    // type: BaseApiErrorResponse,
+    type: BaseApiErrorResponse,
   })
   @HttpCode(200) // 设置HTTP状态码为200
   @Post('register')
@@ -50,11 +51,11 @@ export class AuthController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    // type: SwaggerBaseApiResponse(LoginDTO),
+    type: SwaggerBaseApiResponse(LoginDTO),
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    // type: BaseApiErrorResponse,
+    type: BaseApiErrorResponse,
   })
   @HttpCode(200) // 设置HTTP状态码为200
   @Post('login')
@@ -75,13 +76,16 @@ export class AuthController {
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    // type: BaseApiErrorResponse,
+    type: BaseApiErrorResponse,
   })
   @HttpCode(200) // 设置HTTP状态码为200
   @Post('logout')
   async logout(): Promise<any> {
     // 处理登出逻辑
     // return this.authService.logout();
+    return {
+      msg: '登出成功'
+    }
   }
 
   @ApiOperation({
@@ -89,7 +93,7 @@ export class AuthController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    // type: SwaggerBaseApiResponse(UserInfoDto),
+    type: SwaggerBaseApiResponse(UserInfoDto),
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
