@@ -3,9 +3,13 @@ import { ContentService } from './services/content.service';
 import { ContentController } from './controllers/content.controller';
 import { CMSProviders } from './cms.providers';
 import { SharedModule } from '@/shared/shared.module';
+import { TemplateController } from './controllers/template.controller';
 
 @Module({
-  controllers: [ContentController],
+  controllers: [
+    ContentController,
+    TemplateController,
+  ],
   providers: [
     ContentService,
     ...CMSProviders,
@@ -13,5 +17,7 @@ import { SharedModule } from '@/shared/shared.module';
   imports: [
     SharedModule
   ],
+  exports: [
+  ]
 })
 export class CmsModule {}
