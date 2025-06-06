@@ -16,7 +16,7 @@ export class ContentService {
   ) {
     this.logger.setContext(ContentService.name);
   }
-  async create(createCmDto: CreateContentDto) {
+  async create(createCmDto: UpdateContentDto) {
     
     // 获取 id，看看数据库有没有这个用户，来确定是更新还是新建
     const { id } = createCmDto
@@ -104,15 +104,72 @@ export class ContentService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} cm`;
+  async findOne(id: string) {
+    const content = await this.contentRepository.findOneBy({
+      id: parseInt(id),
+      isDeleted: false
+    })
+    return content
   }
 
+  async findPublishList(paginationParams: {
+    page: number;
+    pageSize: number;
+    userId?: string
+  }): Promise<{data: Content[], count: number}> {
+    const { page, pageSize } = paginationParams
+    const [data, count]  = await this.contentRepository.findAndCount({
+      where: {
+        publish: true,
+        isDeleted: false
+      },
+      skip: (page - 1) * pageSize, // 计算跳过的记录数
+      take: pageSize, // 限制返回的记录数
+      cache: true, // 启用缓存
+      order: {
+        createdAt: 'DESC', // 按照创建时间降序排列
+      },
+    })
+    return {
+      data,
+      count,
+    }
+  }
   update(id: number, updateCmDto: UpdateContentDto) {
     return `This action updates a #${id} cm`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} cm`;
+  async remove(id: number) {
+    // 逻辑删除
+    const result = await this.contentRepository.updateOne(
+      { id },
+      { $set: { 
+          isDeleted: true,
+          publish: false
+        } 
+      }
+    )
+    // 同步 SSR
+    await this.syncSSR(id)
+    return result
+  }
+
+  /**
+   * 发布某条内容，使用 create 代替了
+   * @deprecated 
+   * @param id 内容 id
+   * @returns 
+   */
+  async publishContent(id: number) {
+    const result = await this.contentRepository.updateOne(
+      { id },
+      { $set: { 
+          publish: true
+        } 
+      }
+    )
+    // 同步 SSR
+    await this.syncSSR(id)
+    return result
   }
 }

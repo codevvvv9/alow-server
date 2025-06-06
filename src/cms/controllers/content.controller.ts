@@ -11,6 +11,7 @@ import {
   HttpCode,
   Req,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { ContentService } from '../services/content.service';
 import { CreateContentDto } from '../dtos/content.dto';
@@ -23,6 +24,7 @@ import { log } from 'console';
 import { plainToInstance } from 'class-transformer';
 import { PaginationParamsDto } from '@/shared/dtos/pagination-params.dto';
 import { query } from 'winston';
+import { IdDTO } from '@/shared/dtos/id.dto';
 
 @ApiTags('内容管理')
 @Controller('api/web/content')
@@ -97,18 +99,153 @@ export class ContentController {
     }
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.contentService.findOne(+id);
+  @ApiOperation({
+    summary: '获取单个内容'
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('get')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: SwaggerBaseApiResponse(CreateContentDto),
+  })
+  @ApiResponse({ 
+    status: HttpStatus.BAD_REQUEST, 
+    type: BaseApiErrorResponse 
+  })
+  @HttpCode(HttpStatus.OK)
+  async findOne(@Query() query: Record<string, any>) {
+    const { id } = query
+    return await this.contentService.findOne(id);
   }
 
+  @ApiOperation({
+    summary: '查找已发布文章列表'
+  })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: SwaggerBaseApiResponse(CreateContentDto),
+  })
+  @ApiResponse({ 
+    status: HttpStatus.BAD_REQUEST, 
+    type: BaseApiErrorResponse 
+  })
+  @UseGuards(JwtAuthGuard)
+  @Get('publishList')
+  @HttpCode(HttpStatus.OK)
+  async findPublishList(
+    // 分页信息
+    @Query() query: PaginationParamsDto,
+    @Req() req: Record<string, any> // 登录信息，用到 userId
+  ) {
+    const userId = req.user.id;
+    const paginationParams = plainToInstance(PaginationParamsDto, query)
+    const { data, count}  = await this.contentService.findPublishList({
+      ...paginationParams,
+      userId
+    }
+    );
+    return {
+      data,
+      meta: {
+        total: count, // 总记录数
+        page: paginationParams.page, // 当前页码
+        pageSize: paginationParams.pageSize, // 每页条数
+      }
+    }
+  }
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCmDto: UpdateCmDto) {
     return this.contentService.update(+id, updateCmDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.contentService.remove(+id);
+  @ApiOperation({
+    summary: '删除某条内容'
+  })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: SwaggerBaseApiResponse(CreateContentDto),
+  })
+  @ApiResponse({ 
+    status: HttpStatus.BAD_REQUEST, 
+    type: BaseApiErrorResponse 
+  })
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @Post('delete')
+  async remove(@Body() dto: IdDTO) {
+    const { id } = dto
+    return await this.contentService.remove(+id);
+  }
+
+  @ApiOperation({
+    summary: '发布某条内容'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: SwaggerBaseApiResponse(CreateContentDto),
+  })
+  @ApiResponse({ 
+    status: HttpStatus.BAD_REQUEST, 
+    type: BaseApiErrorResponse 
+  })
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @Post('publish')
+  @ApiBearerAuth()
+  async publishContent(@Body() dto: IdDTO) {
+    const { id } = dto
+    // 其实是逻辑发布而已
+    return this.contentService.create({
+      id,
+      publish: true
+    })
+  }
+
+  @ApiOperation({
+    summary: '下架某条内容'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: SwaggerBaseApiResponse(CreateContentDto),
+  })
+  @ApiResponse({ 
+    status: HttpStatus.BAD_REQUEST, 
+    type: BaseApiErrorResponse 
+  })
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @Post('unpublish')
+  @ApiBearerAuth()
+  async unpublishContent(@Body() dto: IdDTO) {
+    const { id } = dto
+    return this.contentService.create({
+      id,
+      publish: false
+    })
+  }
+
+  @ApiOperation({
+    summary: '生成截图'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: SwaggerBaseApiResponse(CreateContentDto),
+  })
+  @ApiResponse({ 
+    status: HttpStatus.BAD_REQUEST, 
+    type: BaseApiErrorResponse 
+  })
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @Get('screenshot/:id')
+  @ApiBearerAuth()
+  async takeScreenshot(@Param('id') id: string) {
+    if (!id) {
+      throw new BadRequestException('生成截图时, id 不能为空')
+    }
+    return this.contentService.takeScreenshot(+id)
   }
 }
