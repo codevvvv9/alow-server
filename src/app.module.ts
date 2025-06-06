@@ -5,11 +5,13 @@ import { UserModule } from './user/user.module';
 import { SharedModule } from './shared/shared.module';
 import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionFilter } from './shared/filters/AllExceptionFillter';
+import { CmsModule } from './cms/cms.module';
 
 @Module({
   imports: [
     UserModule,
-    SharedModule, // 引入共享模块
+    SharedModule,
+    CmsModule, // 引入共享模块
   ],
   controllers: [AppController],
   providers: [
